@@ -536,7 +536,7 @@ cursor: pointer;
     }
 
     .overlay{     
-        /* display: none;; */
+        display: none;;
         z-index: 9999;
         height: 100%;
         width: 390px;
@@ -544,7 +544,10 @@ cursor: pointer;
         /* overflow: hidden; */
         position: absolute;
         left: 50px;
-        transition: all .35s ease-out;  
+        transition: all .35s ease-out; 
+        
+        /* display: flex;
+        flex-direction: column; */
     }
 
     .overlay >*{   

@@ -4,15 +4,22 @@ import Storelist from './Storelist.jsx';
 
 const Overlay = (props) => {
     const { data, position } = useContext(MaskContext)
-    const { itemlist, openid, open, onClick,setOpen } = props;
-
-    // console.log(props.open)
-    console.log(props.itemlist)
+    const { itemlist, openid, open, setOpen } = props;
+    console.log(props)
     function callback(count){
         console.log(count)
     }
     
-    
+    // console.log(props.itemlist)
+
+    // switch (props.itemlist){
+    //     case 'list':
+    //         console.log('list');
+    //         break;
+    //     default:
+    //         console.log(`Sorry, we are out of ${props.itemlist}.`);
+    // }
+
     //將Select需要的搜索項目先提出來
     function optionsfilter(arr) {
         const result = arr.map(({ properties }) => {
@@ -25,12 +32,10 @@ const Overlay = (props) => {
     }
 
     return( 
-        <Storelist 
-            open_list={props.itemlist}
-            county={optionsfilter(data)} 
-            open={open} 
-            onClick={onClick} 
-            // parentCallback={callback}
+        <Storelist county={optionsfilter(data)} 
+        open={open} 
+        onClick={() => setOpen(!open)}
+        parentCallback={callback}
         />  
     )
 }

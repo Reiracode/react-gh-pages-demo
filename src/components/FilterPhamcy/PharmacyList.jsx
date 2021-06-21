@@ -1,23 +1,16 @@
 import React, { useContext, useMemo , useState ,useEffect} from 'react';
 import { MaskContext } from '../../Context.js'
 // click openPopup
-const PharamcyItem = ({ item, orderid, onItemClick}) => {
-    const { data, maskvalue } = useContext(MaskContext);
-    // console.log({data})
-    // console.log({ maskvalue });
-
-    const { properties, geometry} = item
-    // console.log(orderid)
+const PharamcyItem = ({ item, orderid, onItemClick, newsss}) => {
+    const {properties} = item
     return (
-        <div className="store_detail"
-            onClick={() => {onItemClick(orderid);
-                // console.log(orderid)
-            }}>
+        <div className="store_detail"  onClick={() =>  onItemClick(orderid) }>
             <h2 className="store_title" data-child={properties.mask_child}
                 data-adult={properties.mask_adult}>{properties.name}
-                {/* <span><i className="fas fa-map-marker-alt"></i>
-                {distance >= 1 ? distance.toFixed(1) + 'km' : (distance * 1000 >> 0) + 'm'}
-                </span> */}
+                <span><i className="fas fa-map-marker-alt"></i>
+                   {/* {getDistance(cor) } */}
+                    {newsss >= 1 ? newsss.toFixed(1) + 'km' : (newsss * 1000 >> 0) + 'm'}
+                </span>
             </h2>
             <p className="addtolist" ><i className="far fa-check-square"></i></p>
             <p><i className="fas fa-briefcase"></i>{properties.address}</p>
@@ -30,59 +23,90 @@ const PharamcyItem = ({ item, orderid, onItemClick}) => {
                 <span data-size='child'>兒童{properties.mask_child}</span>
             </div>
             <span>最後更新:{properties.updated}</span>
-    </div>)
+        </div>
+    )
 }
 
-const PharmacyList = ({ county, town }) => {
-    const { data, position, selindex ,filters } = useContext(MaskContext);
+const PharmacyList = ({ county, town, size }) => {
+    const { data, position, selindex, filterdata } = useContext(MaskContext);
     console.log(county)//drowdwn//city
-    console.log(town)//Manga
-    //item.county.replace(/臺/g, '台'))
-    const list = useMemo(() => county && town 
-    ? data.filter(({ properties }) => {
-        return properties.county.replace(/臺/g, '台') === county && properties.town.replace(/臺/g, '台') === town
-    }) 
-    : [], [town, data, county])
-    console.log(list)
+    console.log(town)//Manga//mask_adult: 3141mask_child: 1290
+    console.log(filterdata)
+    console.log(data)
+    console.log(position)
 
-//根據list變動來更新data
-    useEffect(()=>{
+    const list = useMemo(() =>      
+            county && town ? data.filter(({ properties }) => {
+                return properties.county.replace(/臺/g, '台') === county
+                    && properties.town.replace(/臺/g, '台') === town
+                    && size_query(size, properties)}) 
+            : data.filter(item => {
+                    return getDistance([position[0], position[1]], [item.geometry.coordinates[1], item.geometry.coordinates[0]]) < 1
+            }), [county, town])
+        //[county, town, data, size])
+
+    //markers根據list變動來更新data 
+    useEffect(() => {
         console.log(list)
-        filters.setSeldata(list);
-        console.log("useEffect");
-    },[list])
+        console.log(!list.length)
+        const nearby = data.filter(item => {
+            return getDistance([position[0], position[1]], [item.geometry.coordinates[1], item.geometry.coordinates[0]]) < 1
+        })
+        console.log(nearby)
+        !list.length 
+            ? filterdata.setSeldata(nearby)
+            : filterdata.setSeldata(list)
+
+    }, [list])
+   
+
+    function getDistance(position, destination) {
+        let lat1 = position[0]
+        let lng1 = position[1]
+        let lat2 = destination[0]
+        let lng2 = destination[1]
+        return 2 * 6378.137 * Math.asin(Math.sqrt(Math.pow(Math.sin(Math.PI * (lat1 - lat2) / 360), 2) + Math.cos(Math.PI * lat1 / 180) * Math.cos(Math.PI * lat2 / 180) * Math.pow(Math.sin(Math.PI * (lng1 - lng2) / 360), 2)))
+    }
+
+
+    function size_query(x, properties) {
+        if (x == "child") {
+            return properties.mask_child > 0
+        } else if (x == "adult") {
+            return properties.mask_adult > 0
+        } else {
+            return (properties.mask_adult >= 0 || properties.mask_child >= 0)
+        }
+    }
 
     function handleItemClick(index) {
-        console.log(index);
-        console.log(selindex);
-
-        //點選清單index marker pop
         selindex.setSelected(index);
-        // update data
-        // filters.setSeldata(list);
-
-       //利用useContext改變資料
-//  const [maskData, setMaskdata] = useState([]);
-//  const madedata = { maskData, setMaskdata };
-//  <MaskContext.Provider
-//           value={{
-//             data: maskData,
-//             position: location,
-//             selindex: selvalue,
-//             maskvalue: madedata
     }
+
 
 
     return (
         <div className="datalist" id="storelist">
-            {list.map((item,index) => 
+            {/* {list.map((item,index) => 
                     (<PharamcyItem 
                         key={index} 
                         item={item} 
                         orderid ={index}
                         onItemClick={handleItemClick} 
                     />))
-            }
+            } */}
+
+            {list.sort(({ geometry: { coordinates: a } }, { geometry: { coordinates: b } }) => {
+                return getDistance([position[0], position[1]], [a[1], a[0]]) - getDistance([position[0], position[1]], [b[1], b[0]])
+            }).map((item, index) => {
+                return (<PharamcyItem
+                        key={index}
+                        item={item}
+                        orderid={index}
+                        onItemClick={handleItemClick}
+                        newsss={getDistance([position[0], position[1]], [item.geometry.coordinates[1], item.geometry.coordinates[0]])}
+                    />)} 
+            )}      
         </div>
     );
 }
